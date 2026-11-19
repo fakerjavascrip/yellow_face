@@ -1,0 +1,649 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>典韦 | 河北梆子 NFC 互动体验</title>
+
+<style>
+:root{
+  --paper:#f5eddd;
+  --paper2:#eadac0;
+  --red:#9e302a;
+  --gold:#dfac36;
+  --ink:#332820;
+  --muted:#8b7660;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:"Songti SC","Noto Serif SC",serif;
+  background:
+    radial-gradient(circle at 15% 20%,#fff8ea 0%,transparent 45%),
+    linear-gradient(135deg,#f7f0e2,#eadbc2);
+}
+button{font-family:inherit;cursor:pointer}
+header{
+  background:#98332e;
+  color:white;
+  padding:16px 6%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.brand{font-size:22px;font-weight:bold;letter-spacing:5px}
+.brand-en{font-size:10px;letter-spacing:2px}
+.page{display:none}
+.page.active{display:block}
+.container{max-width:1100px;margin:auto;padding:35px 22px}
+.en{
+  color:var(--muted);
+  font-family:Georgia,serif;
+  font-size:13px;
+  line-height:1.85;
+}
+.section-title{
+  font-size:24px;
+  color:var(--red);
+  margin:0 0 15px;
+}
+.line{
+  width:60px;height:3px;
+  background:var(--gold);
+  margin:20px auto;
+}
+.center{text-align:center}
+
+/* 第一页海报 */
+.poster-wrap{max-width:760px;margin:30px auto}
+.poster{
+  width:100%;
+  height:980px;
+  border:3px solid #c7aa78;
+  background:white;
+}
+.btn{
+  border:0;
+  padding:15px 28px;
+  background:var(--red);
+  color:white;
+  letter-spacing:3px;
+  font-size:15px;
+  transition:.25s;
+}
+.btn:hover{background:#78211e}
+.full{width:100%;margin-top:20px}
+
+/* 第二页标题 */
+.back{
+  border:1px solid var(--red);
+  background:transparent;
+  color:var(--red);
+  padding:10px 18px;
+  margin-bottom:35px;
+}
+.hero-title{
+  text-align:center;
+  margin:20px 0 45px;
+}
+.hero-title h1{
+  font-size:58px;
+  font-weight:500;
+  letter-spacing:18px;
+  color:var(--red);
+  margin:12px 0;
+}
+.hero-title .subtitle{
+  letter-spacing:4px;
+  font-size:13px;
+}
+
+/* 典韦人物介绍主区域 */
+.character{
+  display:grid;
+  grid-template-columns:44% 56%;
+  align-items:center;
+  gap:0;
+  border:1px solid #d8c4a0;
+  background:rgba(255,251,243,.45);
+  overflow:hidden;
+}
+.character-art{
+  min-height:520px;
+  background:
+    radial-gradient(circle,#f7d67d30,transparent 70%);
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:15px;
+}
+.character-art:before{
+  content:"";
+  position:absolute;
+  width:80%;aspect-ratio:1;
+  border:2px solid #d9a63870;
+  border-radius:50%;
+}
+.character-art img{
+  position:relative;
+  width:100%;
+  max-height:570px;
+  object-fit:contain;
+  mix-blend-mode:multiply;
+  z-index:1;
+}
+.character-info{padding:35px 42px 35px 25px}
+.character-info h2{
+  color:var(--red);
+  font-size:32px;
+  margin:8px 0 12px;
+}
+.character-info .intro{
+  line-height:2.05;
+  font-size:16px;
+}
+.character-info .en{margin-top:10px}
+.tags{display:flex;flex-wrap:wrap;gap:9px;margin:22px 0}
+.tag{
+  border:1px solid #b78a55;
+  font-size:12px;
+  padding:7px 12px;
+  color:#895521;
+}
+
+/* 内容卡片 */
+.section{
+  margin-top:35px;
+  padding:30px 35px;
+  border-left:4px solid var(--red);
+  background:#fffaf0a8;
+  box-shadow:0 5px 20px #8b6c3910;
+}
+.section p{
+  font-size:15px;
+  line-height:2;
+  margin-bottom:8px;
+}
+.section .en{
+  padding-bottom:16px;
+  border-bottom:1px solid #dbc8ad;
+}
+.section .en:last-child{border-bottom:0}
+.number{
+  font-size:12px;
+  color:#b2884a;
+  letter-spacing:4px;
+}
+
+/* 人物文化关键词 */
+.keywords{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin:30px 0;
+}
+.keyword{
+  border:1px solid #c9a672;
+  padding:25px 10px;
+  text-align:center;
+  background:#fff9ea80;
+}
+.keyword strong{
+  display:block;
+  font-size:21px;
+  color:var(--red);
+  margin-bottom:10px;
+}
+
+/* 音乐播放模块 */
+.music-panel{
+  margin-top:50px;
+  background:linear-gradient(135deg,#352522,#1c1715);
+  color:#f6dfb0;
+  padding:42px 25px;
+  text-align:center;
+  border-top:6px solid var(--gold);
+}
+.music-panel h2{font-size:27px;letter-spacing:5px}
+.music-panel .en{color:#c4a77a}
+.record{
+  width:185px;height:185px;
+  margin:30px auto;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:
+    repeating-radial-gradient(circle,
+      #171313 0px,#171313 4px,
+      #38302a 5px,#161312 7px);
+  box-shadow:0 0 0 6px #5e4b35;
+}
+.record-center{
+  width:82px;height:82px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--gold);
+  color:#6f2924;
+  border:7px solid var(--red);
+  font-size:20px;
+  font-weight:bold;
+}
+.record.playing{animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+audio{
+  display:block;
+  width:100%;
+  max-width:550px;
+  margin:25px auto;
+}
+.play-btn{
+  display:block;
+  margin:12px auto;
+  padding:13px 35px;
+  background:var(--gold);
+  color:#33231d;
+  border:none;
+  font-size:16px;
+}
+#status{font-size:13px;color:#d4bb92}
+footer{
+  margin-top:40px;
+  padding:30px 15px;
+  text-align:center;
+  color:#94795b;
+  font-size:12px;
+  border-top:1px solid #d5c19d;
+}
+
+/* 手机端 */
+@media(max-width:700px){
+  .container{padding:23px 14px}
+  .brand{font-size:17px}
+  .brand-en{font-size:8px}
+  .poster{height:130vw}
+  .hero-title h1{font-size:43px;letter-spacing:11px}
+  .character{grid-template-columns:1fr}
+  .character-art{min-height:auto;padding:20px 35px}
+  .character-art img{max-height:420px}
+  .character-info{padding:10px 25px 30px}
+  .character-info h2{font-size:28px}
+  .section{padding:23px 20px}
+  .keywords{gap:7px}
+  .keyword{padding:18px 5px}
+  .keyword strong{font-size:17px}
+  .keyword .en{font-size:10px}
+}
+\n/* 第二页：使用黄色唱片原图实现真实可用的播放控件 */
+.music-panel{margin-top:42px;padding:30px 12px 24px;background:linear-gradient(145deg,#fffaf1bd,#eddfc8a8);border-top:3px solid var(--gold);text-align:center;color:var(--ink)}
+.music-panel h2{margin:6px 0;color:var(--red);font-size:27px;letter-spacing:4px}
+.music-panel .en{color:#94734c}
+.opera-player{position:relative;width:min(100%,510px);margin:2px auto 0;aspect-ratio:1024/1535;isolation:isolate}
+#music{display:none}
+.opera-player-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
+/* Hide the image's fixed sample time stamps with matching cream patches. */
+.music-time{position:absolute;top:66.05%;z-index:2;padding:0 4px;background:#ffebca;color:#231c15;line-height:1.25;font:clamp(11px,2.6vw,17px) Georgia,serif;font-variant-numeric:tabular-nums}
+.music-time.current{left:12.4%}.music-time.total{right:11.7%}
+.music-progress{position:absolute;z-index:4;top:63.6%;left:12.4%;width:75%;height:2.3%;margin:0;appearance:none;-webkit-appearance:none;background:linear-gradient(90deg,#d9a022 0%,#d9a022 var(--played,0%),#e0bd82 var(--played,0%),#e0bd82 100%);border:1px solid #a87429;border-radius:30px;cursor:pointer;touch-action:none}
+.music-progress::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#c31916;border:4px solid #ffe9aa;box-shadow:0 0 0 2px #b77a25;border-radius:50%}
+.music-progress::-moz-range-thumb{width:13px;height:13px;background:#c31916;border:4px solid #ffe9aa;box-shadow:0 0 0 2px #b77a25;border-radius:50%}
+.player-hit{position:absolute;z-index:5;border:0;background:transparent;border-radius:50%;cursor:pointer;touch-action:manipulation}
+.player-hit:focus-visible{outline:3px solid #cb2320;outline-offset:2px}
+.player-prev{left:26.5%;top:70.1%;width:11.5%;height:7.6%}
+.player-next{left:64.5%;top:70.1%;width:11.5%;height:7.6%}
+.player-main{left:41%;top:67.5%;width:19.3%;height:13.3%;display:grid;place-items:center}
+.player-main .pause-icon{display:none;position:relative;width:66%;height:66%;border-radius:50%;background:#ffbf16;color:white;box-shadow:0 0 0 2px #e6a124}
+.player-main .pause-icon::after{content:'Ⅱ';position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);font:bold clamp(22px,5vw,39px) Arial,sans-serif}
+.opera-player.is-playing .pause-icon{display:block}
+.player-state{font-size:14px;color:#805729;min-height:1.5em;margin:8px 0 0}
+.player-note{font:11px Georgia,serif;color:#9e8569;letter-spacing:1.5px;margin-top:8px}
+.player-error{display:none;max-width:450px;margin:10px auto 0;color:#8d241f;font-size:12px}
+.player-error.show{display:block}
+/* Phone browsers often do not render PDF embeds; display a rasterization of the same PDF instead. */
+.poster-fallback{display:none;width:100%;height:auto;border:3px solid #c7aa78}
+@media(max-width:700px){.poster{display:none}.poster-fallback{display:block}.music-panel{padding:24px 0}.music-time{top:66.2%}.music-progress::-webkit-slider-thumb{width:16px;height:16px}}
+
+</style>
+</head>
+
+<body>
+<header>
+  <div class="brand">河北梆子</div>
+  <div class="brand-en">HEBEI BANGZI THEATRE</div>
+</header>
+
+<!-- 第一页：PDF海报 -->
+<div id="home" class="page active">
+  <div class="container">
+    <div class="center">
+      <p class="en">TRADITIONAL CHINESE OPERA</p>
+      <h1 style="color:#9e302a">戏韵 · 典韦</h1>
+      <div class="line"></div>
+      <p>一张脸谱，一段戏韵</p>
+      <p class="en">A Mask, A Melody, A Cultural Journey</p>
+    </div>
+
+    <div class="poster-wrap">
+      <iframe
+        class="poster"
+        src="./黄色脸谱(1).pdf#toolbar=0"
+        title="典韦黄色脸谱海报">
+      </iframe>
+      <img class="poster-fallback" src="./poster-preview.jpg" alt="黄色脸谱海报（由上传PDF生成）">
+
+      <button class="btn full" onclick="showDetail()">
+        点击探索典韦 · 聆听戏韵
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 第二页：典韦双语介绍 -->
+<div id="detail" class="page">
+  <div class="container">
+
+    <button class="back" onclick="showHome()">← 返回海报</button>
+
+    <div class="hero-title">
+      <p class="en">THE LEGEND OF DIAN WEI</p>
+      <h1>典韦</h1>
+      <p class="subtitle">黄色脸谱 · 忠勇之将</p>
+      <p class="en">YELLOW OPERA MASK · THE LOYAL WARRIOR</p>
+      <div class="line"></div>
+    </div>
+
+    <!-- 人物图片 + 中英介绍 -->
+    <div class="character">
+      <div class="character-art">
+        <img src="./dianwei.png"
+             alt="典韦黄色戏曲人物形象">
+      </div>
+
+      <div class="character-info">
+        <p class="en">CHARACTER PROFILE / 人物档案</p>
+        <h2>典韦 · Dian Wei</h2>
+
+        <div class="tags">
+          <span class="tag">忠勇果敢</span>
+          <span class="tag">骁勇善战</span>
+          <span class="tag">黄色脸谱</span>
+        </div>
+
+        <p class="intro">
+          典韦是东汉末年曹操麾下的著名猛将，
+          以过人的力量、勇猛的战斗能力和
+          忠诚无畏的精神而闻名。
+        </p>
+        <p class="en">
+          Dian Wei was a renowned warrior serving
+          under Cao Cao during the late Eastern Han
+          Dynasty. He was celebrated for his
+          extraordinary strength, exceptional
+          fighting skills, and unwavering loyalty.
+        </p>
+
+        <p class="intro">
+          在传统戏曲艺术中，典韦常以鲜明的
+          黄色脸谱登场，通过夸张的眉眼、
+          强烈的色彩和威武的身段，
+          展现其勇猛刚烈的人物性格。
+        </p>
+        <p class="en">
+          In traditional Chinese opera, Dian Wei
+          is often represented by a striking
+          yellow facial mask. Exaggerated facial
+          patterns, bold colors, and powerful
+          movements highlight his fierce and
+          courageous personality.
+        </p>
+      </div>
+    </div>
+
+    <!-- 第一部分 -->
+    <div class="section">
+      <span class="number">01 / CHARACTER STORY</span>
+      <h2 class="section-title">壹 · 人物故事</h2>
+
+      <p>
+        典韦以忠诚和勇武著称，是曹操麾下的重要护卫。
+        建安二年（197年），在宛城之战中，
+        他奋力抵御敌军，最终战死。
+      </p>
+      <p class="en">
+        Dian Wei was renowned for his loyalty
+        and bravery as one of Cao Cao's trusted
+        guards. In 197 CE, during the Battle of
+        Wancheng, he fought fiercely against
+        enemy forces and ultimately lost his life.
+      </p>
+
+      <p>
+        他的故事象征着忠诚、责任与无畏，
+        并成为传统文学和戏曲艺术中
+        富有代表性的英雄叙事。
+      </p>
+      <p class="en">
+        His story symbolizes loyalty, duty,
+        and fearlessness, making him a memorable
+        heroic figure in traditional literature
+        and Chinese opera.
+      </p>
+    </div>
+
+    <!-- 第二部分 -->
+    <div class="section">
+      <span class="number">02 / FACIAL MASK CULTURE</span>
+      <h2 class="section-title">贰 · 黄色脸谱文化</h2>
+
+      <p>
+        在传统戏曲脸谱的色彩表现中，
+        黄色常用于突出勇猛、刚烈和骁悍的
+        人物特征。典韦的黄色脸谱
+        具有鲜明的视觉识别性。
+      </p>
+      <p class="en">
+        In traditional opera mask symbolism,
+        yellow often conveys courage, fierceness,
+        and a powerful temperament.
+        Dian Wei's yellow mask gives him a
+        distinctive visual identity.
+      </p>
+
+      <p>
+        夸张的眉形、锐利的眼部轮廓和
+        对称的面部纹样，共同塑造出
+        威严而富有力量感的英雄形象。
+      </p>
+      <p class="en">
+        Exaggerated eyebrows, sharp eye contours,
+        and symmetrical facial patterns work
+        together to create an imposing and
+        powerful heroic image.
+      </p>
+    </div>
+
+    <!-- 关键词 -->
+    <div class="keywords">
+      <div class="keyword">
+        <strong>忠诚</strong>
+        <span class="en">LOYALTY</span>
+      </div>
+      <div class="keyword">
+        <strong>勇猛</strong>
+        <span class="en">BRAVERY</span>
+      </div>
+      <div class="keyword">
+        <strong>刚烈</strong>
+        <span class="en">FIERCENESS</span>
+      </div>
+    </div>
+
+    <!-- 第三部分 -->
+    <div class="section">
+      <span class="number">03 / HEBEI BANGZI OPERA</span>
+      <h2 class="section-title">叁 · 河北梆子艺术</h2>
+
+      <p>
+        河北梆子是中国传统地方戏曲剧种，
+        以高亢激越的唱腔、鲜明的节奏和
+        富有感染力的舞台表演而著称。
+      </p>
+      <p class="en">
+        Hebei Bangzi is a traditional regional
+        Chinese opera known for its powerful
+        vocal style, distinctive rhythms,
+        and expressive stage performances.
+      </p>
+
+      <p>
+        本作品将戏曲人物、传统脸谱与
+        NFC 数字音频技术相结合，
+        让观众通过实体海报进入数字空间，
+        进一步了解人物故事与戏曲文化。
+      </p>
+      <p class="en">
+        This project combines traditional opera
+        characters, facial mask design, and
+        NFC audio technology. It connects
+        physical posters with digital experiences,
+        allowing audiences to explore character
+        stories and traditional opera culture.
+      </p>
+    </div>
+
+    <!-- 黄色唱片图像是用户提供的原图；下面叠加真实音频交互控件 -->
+    <section class="music-panel" aria-label="典韦戏曲音乐播放器">
+      <p class="en">04 / NFC AUDIO EXPERIENCE</p>
+      <h2>肆 · 戏韵聆听</h2>
+      <p class="en">DIAN WEI · YELLOW MASK OPERA AUDIO</p>
+      <div class="opera-player" id="operaPlayer">
+        <img class="opera-player-img" src="./player-yellow-transparent.png" alt="河北梆子黄色透明背景戏曲唱片音乐播放器">
+        <label for="musicProgress" class="sr-only" style="position:absolute;clip-path:inset(50%);width:1px;height:1px;overflow:hidden">音频播放进度</label>
+        <input id="musicProgress" class="music-progress" type="range" min="0" max="1000" value="0" aria-label="拖动音乐进度">
+        <span class="music-time current" id="currentTime">00:00</span>
+        <span class="music-time total" id="durationTime">00:00</span>
+        <button type="button" class="player-hit player-prev" onclick="seekMusic(-10)" aria-label="后退10秒"></button>
+        <button type="button" class="player-hit player-main" id="playPause" onclick="toggleMusic()" aria-label="播放音乐"><span class="pause-icon" aria-hidden="true"></span></button>
+        <button type="button" class="player-hit player-next" onclick="seekMusic(10)" aria-label="前进10秒"></button>
+      </div>
+      <audio id="music" preload="metadata">
+        <source src="./典韦黄.mp3" type="audio/mpeg">
+        <source src="./典韦黄(1).wav" type="audio/wav">
+      </audio>
+      <p class="player-state" id="status" aria-live="polite">点击黄色播放按钮，聆听典韦戏韵</p>
+      <p class="player-note">TAP TO PLAY · DRAG TO SEEK</p>
+      <p class="player-error" id="playerError">若无声音，请检查设备音量或音频文件是否成功上传。</p>
+    </section>
+
+    <div class="center" style="margin-top:50px">
+      <p style="font-size:19px;color:#9e302a">
+        一曲梆子声，千年戏曲情。
+      </p>
+      <p class="en">
+        PRESERVING TRADITION THROUGH DIGITAL EXPERIENCE
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  河北梆子文化数字交互设计
+  <p>HEBEI BANGZI · DIGITAL CULTURAL EXPERIENCE</p>
+</footer>
+
+<script>
+const home = document.getElementById('home');
+const detail = document.getElementById('detail');
+const audio = document.getElementById('music');
+const player = document.getElementById('operaPlayer');
+const progress = document.getElementById('musicProgress');
+const currentTimeEl = document.getElementById('currentTime');
+const durationEl = document.getElementById('durationTime');
+const statusText = document.getElementById('status');
+const errorText = document.getElementById('playerError');
+const playPause = document.getElementById('playPause');
+
+function showDetail(){
+  home.classList.remove('active');
+  detail.classList.add('active');
+  if(location.hash !== '#dianwei') history.replaceState(null,'','#dianwei');
+  window.scrollTo(0,0);
+}
+function showHome(){
+  audio.pause();
+  detail.classList.remove('active');
+  home.classList.add('active');
+  if(location.hash) history.replaceState(null,'',location.pathname+location.search);
+  window.scrollTo(0,0);
+}
+function timeLabel(t){
+  if(!Number.isFinite(t)) return '00:00';
+  return String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0');
+}
+function refreshProgress(){
+  const duration=audio.duration;
+  currentTimeEl.textContent=timeLabel(audio.currentTime);
+  durationEl.textContent=timeLabel(duration);
+  if(Number.isFinite(duration)&&duration>0){
+    const p=audio.currentTime/duration;
+    progress.value=Math.round(p*1000);
+    progress.style.setProperty('--played',(p*100).toFixed(2)+'%');
+  }
+}
+async function toggleMusic(){
+  if(!audio.paused){audio.pause();return;}
+  try {
+    errorText.classList.remove('show');
+    audio.muted=false;
+    audio.volume=1;
+    await audio.play();
+  }catch(err){
+    statusText.textContent='无法播放，请检查文件或浏览器的音频权限';
+    errorText.classList.add('show');
+    console.error('Audio playback error:',err);
+  }
+}
+function seekMusic(seconds){
+  if(!Number.isFinite(audio.duration)) return;
+  audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+seconds));
+}
+progress.addEventListener('input',()=>{
+  if(Number.isFinite(audio.duration)&&audio.duration>0){
+    audio.currentTime=Number(progress.value)/1000*audio.duration;
+    refreshProgress();
+  }
+});
+['timeupdate','loadedmetadata','durationchange','seeked'].forEach(event=>audio.addEventListener(event,refreshProgress));
+audio.addEventListener('play',()=>{
+  player.classList.add('is-playing');
+  playPause.setAttribute('aria-label','暂停音乐');
+  statusText.textContent='正在播放 · 典韦戏曲音频';
+});
+audio.addEventListener('pause',()=>{
+  player.classList.remove('is-playing');
+  playPause.setAttribute('aria-label','播放音乐');
+  statusText.textContent='音乐已暂停';
+});
+audio.addEventListener('ended',()=>{
+  player.classList.remove('is-playing');
+  progress.value=0;
+  progress.style.setProperty('--played','0%');
+  statusText.textContent='播放结束 · 感谢聆听';
+});
+audio.addEventListener('error',()=>{
+  statusText.textContent='音频加载失败，请检查 MP3 / WAV 文件是否上传';
+  errorText.classList.add('show');
+});
+if(location.hash === '#dianwei') showDetail();
+window.addEventListener('hashchange',()=>{
+  if(location.hash==='#dianwei') showDetail();
+  else showHome();
+});
+</script>
+</body>
+</html>
