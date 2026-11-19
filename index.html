@@ -286,9 +286,9 @@ footer{
 #music{display:none}
 .opera-player-img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
 /* Hide the image's fixed sample time stamps with matching cream patches. */
-.music-time{position:absolute;top:66.05%;z-index:2;padding:0 4px;background:#ffebca;color:#231c15;line-height:1.25;font:clamp(11px,2.6vw,17px) Georgia,serif;font-variant-numeric:tabular-nums}
-.music-time.current{left:12.4%}.music-time.total{right:11.7%}
-.music-progress{position:absolute;z-index:4;top:63.6%;left:12.4%;width:75%;height:2.3%;margin:0;appearance:none;-webkit-appearance:none;background:linear-gradient(90deg,#d9a022 0%,#d9a022 var(--played,0%),#e0bd82 var(--played,0%),#e0bd82 100%);border:1px solid #a87429;border-radius:30px;cursor:pointer;touch-action:none}
+.music-time{position:absolute;top:65.7%;z-index:3;min-width:3.2em;padding:2px 6px;background:#ffebca;color:#231c15;line-height:1.2;font:clamp(11px,2.6vw,17px) Georgia,serif;font-variant-numeric:tabular-nums;text-align:center;box-shadow:0 0 0 4px #ffebca}
+.music-time.current{left:12.2%}.music-time.total{right:11.5%}
+.music-progress{position:absolute;z-index:4;top:63.6%;left:12.4%;width:75%;height:2.3%;margin:0;appearance:none;-webkit-appearance:none;background:linear-gradient(90deg,#d9a022 0%,#d9a022 var(--played,0%),#e0bd82 var(--played,0%),#e0bd82 100%);border:1px solid #a87429;border-radius:30px;cursor:pointer;touch-action:none;-webkit-tap-highlight-color:transparent}
 .music-progress::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#c31916;border:4px solid #ffe9aa;box-shadow:0 0 0 2px #b77a25;border-radius:50%}
 .music-progress::-moz-range-thumb{width:13px;height:13px;background:#c31916;border:4px solid #ffe9aa;box-shadow:0 0 0 2px #b77a25;border-radius:50%}
 .player-hit{position:absolute;z-index:5;border:0;background:transparent;border-radius:50%;cursor:pointer;touch-action:manipulation}
@@ -530,10 +530,7 @@ footer{
         <button type="button" class="player-hit player-main" id="playPause" onclick="toggleMusic()" aria-label="播放音乐"><span class="pause-icon" aria-hidden="true"></span></button>
         <button type="button" class="player-hit player-next" onclick="seekMusic(10)" aria-label="前进10秒"></button>
       </div>
-      <audio id="music" preload="metadata">
-        <source src="./典韦黄.mp3" type="audio/mpeg">
-        <source src="./典韦黄(1).wav" type="audio/wav">
-      </audio>
+      <audio id="music" src="./dianwei.wav" type="audio/wav" preload="auto" playsinline webkit-playsinline controlslist="nodownload"></audio>
       <p class="player-state" id="status" aria-live="polite">点击黄色播放按钮，聆听典韦戏韵</p>
       <p class="player-note">TAP TO PLAY · DRAG TO SEEK</p>
       <p class="player-error" id="playerError">若无声音，请检查设备音量或音频文件是否成功上传。</p>
@@ -568,11 +565,15 @@ const statusText = document.getElementById('status');
 const errorText = document.getElementById('playerError');
 const playPause = document.getElementById('playPause');
 
+let seeking = false;
+const AUDIO_SRC = './dianwei.wav';
+
 function showDetail(){
   home.classList.remove('active');
   detail.classList.add('active');
   if(location.hash !== '#dianwei') history.replaceState(null,'','#dianwei');
   window.scrollTo(0,0);
+  warmAudio();
 }
 function showHome(){
   audio.pause();
@@ -582,66 +583,102 @@ function showHome(){
   window.scrollTo(0,0);
 }
 function timeLabel(t){
-  if(!Number.isFinite(t)) return '00:00';
-  return String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0');
+  if(!Number.isFinite(t) || t < 0) return '00:00';
+  const sec = Math.floor(t);
+  return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+}
+function getDuration(){
+  let d = audio.duration;
+  if(Number.isFinite(d) && d > 0) return d;
+  /* iOS Safari may report Infinity until enough media is buffered. */
+  try{
+    if(audio.seekable && audio.seekable.length){
+      d = audio.seekable.end(audio.seekable.length - 1);
+      if(Number.isFinite(d) && d > 0) return d;
+    }
+  }catch(_){}
+  return NaN;
 }
 function refreshProgress(){
-  const duration=audio.duration;
-  currentTimeEl.textContent=timeLabel(audio.currentTime);
-  durationEl.textContent=timeLabel(duration);
-  if(Number.isFinite(duration)&&duration>0){
-    const p=audio.currentTime/duration;
-    progress.value=Math.round(p*1000);
-    progress.style.setProperty('--played',(p*100).toFixed(2)+'%');
+  const duration = getDuration();
+  currentTimeEl.textContent = timeLabel(audio.currentTime || 0);
+  durationEl.textContent = timeLabel(duration);
+  if(Number.isFinite(duration) && duration > 0 && !seeking){
+    const p = Math.min(1, Math.max(0, (audio.currentTime || 0) / duration));
+    progress.value = Math.round(p * 1000);
+    progress.style.setProperty('--played', (p * 100).toFixed(2) + '%');
   }
 }
-async function toggleMusic(){
-  if(!audio.paused){audio.pause();return;}
-  try {
-    errorText.classList.remove('show');
-    audio.muted=false;
-    audio.volume=1;
-    await audio.play();
-  }catch(err){
-    statusText.textContent='无法播放，请检查文件或浏览器的音频权限';
-    errorText.classList.add('show');
-    console.error('Audio playback error:',err);
+function warmAudio(){
+  if(!audio.getAttribute('src')) audio.src = AUDIO_SRC;
+  audio.setAttribute('playsinline', '');
+  audio.setAttribute('webkit-playsinline', '');
+  try{ audio.load(); }catch(_){}
+}
+function toggleMusic(){
+  if(!audio.paused){ audio.pause(); return; }
+  errorText.classList.remove('show');
+  if(!audio.getAttribute('src') && !audio.currentSrc) audio.src = AUDIO_SRC;
+  audio.muted = false;
+  try{ audio.volume = 1; }catch(_){}
+  /* Keep play() inside the user-gesture call stack for iOS. */
+  const playPromise = audio.play();
+  if(playPromise && typeof playPromise.then === 'function'){
+    playPromise.catch(err=>{
+      statusText.textContent = '无法播放，请检查文件或浏览器的音频权限';
+      errorText.classList.add('show');
+      console.error('Audio playback error:', err);
+    });
   }
 }
 function seekMusic(seconds){
-  if(!Number.isFinite(audio.duration)) return;
-  audio.currentTime=Math.max(0,Math.min(audio.duration,audio.currentTime+seconds));
+  const duration = getDuration();
+  if(!Number.isFinite(duration)) return;
+  audio.currentTime = Math.max(0, Math.min(duration, (audio.currentTime || 0) + seconds));
+  refreshProgress();
 }
-progress.addEventListener('input',()=>{
-  if(Number.isFinite(audio.duration)&&audio.duration>0){
-    audio.currentTime=Number(progress.value)/1000*audio.duration;
-    refreshProgress();
+progress.addEventListener('pointerdown', ()=>{ seeking = true; });
+progress.addEventListener('pointerup', ()=>{ seeking = false; refreshProgress(); });
+progress.addEventListener('touchend', ()=>{ seeking = false; refreshProgress(); });
+progress.addEventListener('input', ()=>{
+  const duration = getDuration();
+  if(Number.isFinite(duration) && duration > 0){
+    const p = Number(progress.value) / 1000;
+    progress.style.setProperty('--played', (p * 100).toFixed(2) + '%');
+    audio.currentTime = p * duration;
+    currentTimeEl.textContent = timeLabel(audio.currentTime);
   }
 });
-['timeupdate','loadedmetadata','durationchange','seeked'].forEach(event=>audio.addEventListener(event,refreshProgress));
-audio.addEventListener('play',()=>{
+['timeupdate','loadedmetadata','loadeddata','durationchange','seeked','canplay','canplaythrough','progress'].forEach(event=>{
+  audio.addEventListener(event, refreshProgress);
+});
+audio.addEventListener('play', ()=>{
   player.classList.add('is-playing');
-  playPause.setAttribute('aria-label','暂停音乐');
-  statusText.textContent='正在播放 · 典韦戏曲音频';
+  playPause.setAttribute('aria-label', '暂停音乐');
+  statusText.textContent = '正在播放 · 典韦戏曲音频';
 });
-audio.addEventListener('pause',()=>{
+audio.addEventListener('pause', ()=>{
   player.classList.remove('is-playing');
-  playPause.setAttribute('aria-label','播放音乐');
-  statusText.textContent='音乐已暂停';
+  playPause.setAttribute('aria-label', '播放音乐');
+  if(!audio.ended) statusText.textContent = '音乐已暂停';
 });
-audio.addEventListener('ended',()=>{
+audio.addEventListener('ended', ()=>{
   player.classList.remove('is-playing');
-  progress.value=0;
-  progress.style.setProperty('--played','0%');
-  statusText.textContent='播放结束 · 感谢聆听';
+  progress.value = 0;
+  progress.style.setProperty('--played', '0%');
+  currentTimeEl.textContent = '00:00';
+  statusText.textContent = '播放结束 · 感谢聆听';
 });
-audio.addEventListener('error',()=>{
-  statusText.textContent='音频加载失败，请检查 MP3 / WAV 文件是否上传';
+audio.addEventListener('error', ()=>{
+  statusText.textContent = '音频加载失败，请检查音频文件是否上传';
   errorText.classList.add('show');
+  console.error('Audio element error', audio.error);
 });
+warmAudio();
+refreshProgress();
 if(location.hash === '#dianwei') showDetail();
-window.addEventListener('hashchange',()=>{
-  if(location.hash==='#dianwei') showDetail();
+window.addEventListener('hashchange', ()=>{
+  if(location.hash === '#dianwei') showDetail();
   else showHome();
 });
 </script>
